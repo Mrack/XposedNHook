@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:key="module_status"
+        android:enabled="false"
+        android:title="模块状态">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="module_status_switch"
+            android:title="模块开关" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

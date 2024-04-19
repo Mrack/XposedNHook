@@ -1,0 +1,124 @@
+plugins {
+    alias(libs.plugins.androidApplication)
+}
+
+android {
+    namespace 'cn.mrack.xposed.nhook'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "cn.mrack.xposed.nhook"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    project.tasks.whenTaskAdded { task ->
+        if (task.name == 'stripDebugDebugSymbols') {
+            task.finalizedBy dealAfterMergeDebugNativeLibs
+        }
+        if (task.name == 'stripReleaseReleaseSymbols') {
+            task.finalizedBy dealAfterMergeReleaseNativeLibs
+        }
+    }
+
+
+    task dealAfterMergeReleaseNativeLibs() {
+        doLast {
+            var arch = ["arm64", "v7a"]
+            var version = "release"
+            generate(version, arch)
+        }
+    }
+
+    task dealAfterMergeDebugNativeLibs() {
+        doLast {
+            var arch = ["arm64", "v7a"]
+            var version = "debug"
+            generate(version, arch)
+        }
+    }
+
+}
+
+
+dependencies {
+    compileOnly 'de.robv.android.xposed:api:82'
+}
+
+
+def generate(version, archs) {
+    def MERGED_NATIVE_LIBS_PATH = "$buildDir/intermediates/stripped_native_libs"
+    var fileList = fileTree("$MERGED_NATIVE_LIBS_PATH/$version").matching {
+        include '**/lib*.so'
+    }.collect()
+    for (final def data in fileList) {
+        byte[] fileBytes = data.bytes
+        for (arch in archs) {
+            if (data.path.contains("$arch")) {
+                delete file("src/main/java/cn/mrack/so/$arch")
+                file("src/main/java/cn/mrack/so/$arch").mkdirs()
+                int i = fileBytes.length / 20480
+                String totalText = "";
+                for (int j = 0; j < i; j++) {
+                    byte[] temp = new byte[20480];
+                    System.arraycopy(fileBytes, j * 20480, temp, 0, 20480);
+                    // hex
+                    file("src/main/java/cn/mrack/so/$arch/SoData${j}.java").text = "package cn.mrack.so.$arch;\n" +
+                            "public class SoData$j {\n" +
+                            "    protected static String data${j} = \"" + temp.collect { String.format("%02X", it) }.join("") + "\";\n" +
+                            "}";
+
+                    totalText += "SoData${j}.data${j} + ";
+                }
+                byte[] temp = new byte[fileBytes.length - i * 20480];
+                System.arraycopy(fileBytes, i * 20480, temp, 0, fileBytes.length - i * 20480);
+                file("src/main/java/cn/mrack/so/$arch/SoData${i}.java").text = "package cn.mrack.so.$arch;\n" +
+                        "public class SoData${i} {\n" +
+                        "    protected static String data${i} = \"" + temp.collect { String.format("%02X", it) }.join("") + "\";\n" +
+                        "}";
+                totalText += "SoData${i}.data${i}";
+
+                file("src/main/java/cn/mrack/so/$arch/SoData.java").text = "package cn.mrack.so.$arch;\n" +
+                        "public class SoData {\n" +
+                        "    public static byte[] data = hexToBytes(" + totalText + ");\n" +
+                        "    public static String md5 = \"${fileBytes.md5().toLowerCase()}\";\n" +
+                        "    public static byte[] hexToBytes(String hex) {\n" +
+                        "        byte[] bytes = new byte[hex.length() / 2];\n" +
+                        "        for (int i = 0; i < hex.length(); i += 2) {\n" +
+                        "            bytes[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4) + Character.digit(hex.charAt(i + 1), 16));\n" +
+                        "        }\n" +
+                        "        return bytes;\n" +
+                        "    }\n" +
+                        "}";
+
+            }
+        }
+
+    }
+}
