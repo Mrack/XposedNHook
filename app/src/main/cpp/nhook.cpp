@@ -2,16 +2,9 @@
 // Created by Mrack on 2024/4/19.
 //
 
+#include <fstream>
 #include "nhook.h"
-
-extern "C"
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-    JNIEnv *env;
-    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
-        return -1;
-    }
-    return JNI_VERSION_1_6;
-}
+#include "vm.h"
 
 
 int (*SSL_callback)(void *ctx, void *out_alert);
@@ -20,7 +13,6 @@ int hook_SSL_callback(void *ctx, void *out_alert) {
     int res = SSL_callback(ctx, out_alert);
     return 0;
 }
-
 
 void (*SSL_CTX_set_custom_verify)(void *ctx, int mode, void *callback);
 
@@ -52,9 +44,49 @@ void module_load(const char *file_path) {
     }
 }
 
+void vm_handle_add(void *address, DobbyRegisterContext *ctx) {
+    LOGT("vm address %p ", address);
+    DobbyDestroy(address);
+    auto vm_ = new vm();
+    auto qvm = vm_->init(address);
+    auto state = qvm.getGPRState();
+    syn_regs(ctx, state);
+    uint8_t *fakestack;
+    QBDI::allocateVirtualStack(state, 0x800000, &fakestack);
+    qvm.call(nullptr, (uint64_t) address);
+    QBDI::alignedFree(fakestack);
+
+    // write to file
+    std::ofstream out;
+    std::string data = get_data_path(gContext);
+    out.open(data + "/trace_log.txt", std::ios::out);
+    out << vm_->logbuf.str();
+    out.close();
+}
 
 extern "C"
+{
+
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_cn_mrack_xposed_nhook_NHook_sign1(JNIEnv *env, jclass thiz, jstring sign);
+
 JNIEXPORT void JNICALL
-Java_cn_mrack_xposed_nhook_NHook_initNativeHook(JNIEnv *env, jclass thiz) {
-    hook_module_load();
+Java_cn_mrack_xposed_nhook_NHook_initNativeHook(JNIEnv *env, jclass thiz, jobject context) {
+    LOGD("initNativeHook");
+    // qbdi trace Java_cn_mrack_xposed_nhook_NHook_sign1
+    gContext = env->NewGlobalRef(context);
+    DobbyInstrument((void *) (Java_cn_mrack_xposed_nhook_NHook_sign1), vm_handle_add);
+}
+
+
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+    LOGD("JNI_OnLoad");
+    JNIEnv *env;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
+        return -1;
+    }
+    gVm = vm;
+    return JNI_VERSION_1_6;
+}
 }

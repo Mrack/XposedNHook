@@ -3,6 +3,60 @@
 //
 #include "utils.h"
 
+JavaVM *gVm = nullptr;
+jobject gContext = nullptr;
+
+class JavaEnv {
+public:
+    JavaEnv() {
+        if (gVm != nullptr) {
+            int state = gVm->GetEnv((void **) &env, JNI_VERSION_1_6);
+            if (state == JNI_EDETACHED) {
+                if (JNI_OK == gVm->AttachCurrentThread(&env, NULL)) {
+                    attach = true;
+                } else {
+                    env = nullptr;
+                }
+            } else if (state == JNI_EVERSION) {
+                env = nullptr;
+            }
+        }
+
+    }
+
+    ~JavaEnv() {
+        if (gVm != nullptr && attach) {
+            gVm->DetachCurrentThread();
+        }
+    }
+
+    JNIEnv *operator->() const {
+        return env;
+    }
+
+    bool isNull() const {
+        return env == nullptr;
+    }
+
+    JNIEnv *env;
+    bool attach = false;
+};
+
+const char *get_data_path(jobject context) {
+    JavaEnv env;
+    if (env.isNull()) {
+        return nullptr;
+    }
+    jclass context_class = env->GetObjectClass(context);
+    jmethodID getFilesDir = env->GetMethodID(context_class, "getDataDir", "()Ljava/io/File;");
+    jobject file = env->CallObjectMethod(context, getFilesDir);
+    jclass file_class = env->GetObjectClass(file);
+    jmethodID getPath = env->GetMethodID(file_class, "getPath", "()Ljava/lang/String;");
+    jstring path = (jstring) env->CallObjectMethod(file, getPath);
+    const char *data = env->GetStringUTFChars(path, 0);
+    return data;
+}
+
 int get_sdk_level() {
     if (SDK_INT > 0) {
         return SDK_INT;
@@ -73,7 +127,7 @@ uint64_t get_arg(DobbyRegisterContext *ctx, int index) {
     return ctx->general.regs.r9;
 #elif defined(__arm64__) || defined(__aarch64__)
     assert(index < 8);
-  return ctx->general.x[index];
+    return ctx->general.x[index];
 #else
 #error "Not support this architecture"
 #endif

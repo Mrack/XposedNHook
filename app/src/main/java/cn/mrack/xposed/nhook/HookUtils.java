@@ -39,7 +39,7 @@ public class HookUtils {
         } else {
             Log.e(TAG, "nativeHookInit: load so failed");
         }
-        NHook.initNativeHook();
+        NHook.initNativeHook(context);
     }
 
 

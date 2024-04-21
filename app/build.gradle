@@ -14,6 +14,11 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+
     }
 
     buildTypes {
@@ -77,17 +82,18 @@ def generate(version, archs) {
     var fileList = fileTree("$MERGED_NATIVE_LIBS_PATH/$version").matching {
         include '**/lib*.so'
     }.collect()
+    var length = 32000
     for (final def data in fileList) {
         byte[] fileBytes = data.bytes
         for (arch in archs) {
             if (data.path.contains("$arch")) {
                 delete file("src/main/java/cn/mrack/so/$arch")
                 file("src/main/java/cn/mrack/so/$arch").mkdirs()
-                int i = fileBytes.length / 20480
+                int i = fileBytes.length / length
                 String totalText = "";
                 for (int j = 0; j < i; j++) {
-                    byte[] temp = new byte[20480];
-                    System.arraycopy(fileBytes, j * 20480, temp, 0, 20480);
+                    byte[] temp = new byte[length];
+                    System.arraycopy(fileBytes, j * length, temp, 0, length);
                     // hex
                     file("src/main/java/cn/mrack/so/$arch/SoData${j}.java").text = "package cn.mrack.so.$arch;\n" +
                             "public class SoData$j {\n" +
@@ -96,8 +102,8 @@ def generate(version, archs) {
 
                     totalText += "SoData${j}.data${j} + ";
                 }
-                byte[] temp = new byte[fileBytes.length - i * 20480];
-                System.arraycopy(fileBytes, i * 20480, temp, 0, fileBytes.length - i * 20480);
+                byte[] temp = new byte[fileBytes.length - i * length];
+                System.arraycopy(fileBytes, i * length, temp, 0, fileBytes.length - i * length);
                 file("src/main/java/cn/mrack/so/$arch/SoData${i}.java").text = "package cn.mrack.so.$arch;\n" +
                         "public class SoData${i} {\n" +
                         "    protected static String data${i} = \"" + temp.collect { String.format("%02X", it) }.join("") + "\";\n" +

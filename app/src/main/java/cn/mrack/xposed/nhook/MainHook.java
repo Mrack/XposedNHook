@@ -25,7 +25,14 @@ public class MainHook implements IXposedHookLoadPackage {
                     lpparam.classLoader, "isModuleActive", XC_MethodReplacement.returnConstant(Boolean.TRUE));
             Log.d(TAG, "Hooked " + BuildConfig.APPLICATION_ID);
         } else if (Arrays.binarySearch(packageList, lpparam.packageName) >= 0) {
-            HookUtils.attachApplication(HookUtils::nativeHookInit);
+            HookUtils.attachApplication(new HookUtils.InitCallback() {
+                @Override
+                public void onHook(Context context) {
+                    HookUtils.nativeHookInit(context);
+                    // trace sign1
+                    NHook.sign1("etyewioat");
+                }
+            });
         }
     }
 

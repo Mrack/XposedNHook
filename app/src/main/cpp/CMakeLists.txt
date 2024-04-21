@@ -14,14 +14,20 @@ project("nhook")
 include_directories(.)
 
 add_library(local_dobby STATIC IMPORTED)
+add_library(local_qbdi STATIC IMPORTED)
 
 set_target_properties(local_dobby PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/${ANDROID_ABI}/libdobby.a)
+set_target_properties(local_qbdi PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/${ANDROID_ABI}/libQBDI.a)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
         nhook.cpp
-        linker_hook.cpp.
+        linker_hook.cpp
+        vm.cpp
         utils.cpp
+
+        #demo
+        demo/rc4.cpp
 )
 
 # Specifies libraries CMake should link to your target library. You
@@ -31,4 +37,5 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         # List libraries link to the target library
         android
         local_dobby
+        local_qbdi
         log)

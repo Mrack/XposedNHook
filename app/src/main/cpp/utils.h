@@ -8,6 +8,7 @@
 #include <string>
 #include "dobby/dobby.h"
 #include <assert.h>
+#include <jni.h>
 
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "MainHook", __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "MainHook", __VA_ARGS__)
@@ -21,6 +22,13 @@
 #define ANDROID_S 31
 static int SDK_INT = -1;
 
+
+extern JavaVM *gVm;
+
+extern jobject gContext;
+
+const char *get_data_path(jobject context);
+
 int get_sdk_level();
 
 char *get_linker_path();
@@ -29,7 +37,8 @@ std::pair<size_t, size_t> find_info_from_maps(const char *soname);
 
 int boyer_moore_search(u_char *haystack, size_t haystackLen, u_char *needle, size_t needleLen);
 
-int search_hex(u_char* haystack, size_t haystackLen, const char* needle);
+int search_hex(u_char *haystack, size_t haystackLen, const char *needle);
 
 uint64_t get_arg(DobbyRegisterContext *ctx, int index);
+
 #endif //XPOSEDNHOOK_UTILS_H
