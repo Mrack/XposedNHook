@@ -23,7 +23,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -47,7 +47,7 @@ android {
         if (task.name == 'stripDebugDebugSymbols') {
             task.finalizedBy dealAfterMergeDebugNativeLibs
         }
-        if (task.name == 'stripReleaseReleaseSymbols') {
+        if (task.name == 'stripReleaseDebugSymbols') {
             task.finalizedBy dealAfterMergeReleaseNativeLibs
         }
     }
@@ -84,9 +84,13 @@ def generate(version, archs) {
     }.collect()
     var length = 32000
     for (final def data in fileList) {
-        byte[] fileBytes = data.bytes
         for (arch in archs) {
             if (data.path.contains("$arch")) {
+                byte[] fileBytes = data.bytes
+                if (fileBytes == "placeholder".bytes) {
+                    continue
+                }
+                data.bytes = "placeholder".bytes
                 delete file("src/main/java/cn/mrack/so/$arch")
                 file("src/main/java/cn/mrack/so/$arch").mkdirs()
                 int i = fileBytes.length / length
@@ -99,7 +103,6 @@ def generate(version, archs) {
                             "public class SoData$j {\n" +
                             "    protected static String data${j} = \"" + temp.collect { String.format("%02X", it) }.join("") + "\";\n" +
                             "}";
-
                     totalText += "SoData${j}.data${j} + ";
                 }
                 byte[] temp = new byte[fileBytes.length - i * length];
