@@ -1,8 +1,10 @@
 package cn.mrack.xposed.nhook;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +31,16 @@ public class HookUtils {
                 // get the context
                 Context context = (Context) param.args[0];
                 callback.onHook(context);
+            }
+        });
+    }
+
+    public static void attachActivity(InitCallback callback) {
+        XposedHelpers.findAndHookMethod(Activity.class, "onCreate", Bundle.class, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                Activity activity = (Activity) param.thisObject;
+                callback.onHook(activity);
             }
         });
     }
