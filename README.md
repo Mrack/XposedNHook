@@ -3,6 +3,9 @@
 Xposed免root注入so方案, 支持android各个版本
 
 ## demo:
+### android mod menu
+[...](https://github.com/LGLTeam/Android-Mod-Menu/)
+
 #### youtube ssl pinning
 ...
 
