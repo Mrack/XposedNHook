@@ -28,6 +28,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
 
         #demo
         demo/rc4.cpp
+        demo/test1.cpp
 )
 
 # Specifies libraries CMake should link to your target library. You

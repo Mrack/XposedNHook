@@ -4,6 +4,7 @@ package cn.mrack.xposed.nhook;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -43,12 +44,26 @@ public class MainHook implements IXposedHookLoadPackage {
     }
 
     private static void createMenu(Context activity) {
+        SharedPreferences sp = activity.getSharedPreferences("menu", Context.MODE_PRIVATE);
         Menu menu = new Menu(activity);
         menu.attach();
+
+        menu.Category("Value Change");
+        PBoolean value1 = PBoolean.of(sp, "test1", false);
+        value1.setOnValueChangedListener((v, v1) -> {
+            Log.d(TAG, "Switch: " + NHook.test111(v1 ? 1 : 0));
+        });
+        menu.Switch("Switch 1", value1);
+        PInteger value = PInteger.of(sp, "test2", 0);
+        value.setOnValueChangedListener((v, v1) -> {
+            Log.d(TAG, "SeekBar: " + NHook.test111(v1));
+        });
+        menu.SeekBar("SeekBar 1", value, 0, 100, 5);
+
         menu.Category("Category 1");
         menu.InputNum("InputNum 1", PInteger.of(0));
         menu.InputText("InputText 1", PString.of("Hello World"));
-        menu.Button("Button 1", PBoolean.of(false));
+        menu.Button("Button 1", PBoolean.of(sp, "test3", false));
         menu.CheckBox("CheckBox 1", PBoolean.of(false));
         menu.Switch("Switch 1", PBoolean.of(false));
         menu.ButtonOnOff("Button 2", PBoolean.of(false));

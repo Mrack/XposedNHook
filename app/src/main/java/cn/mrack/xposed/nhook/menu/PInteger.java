@@ -1,25 +1,25 @@
 package cn.mrack.xposed.nhook.menu;
 
 
+import android.content.SharedPreferences;
+
 /**
  * Wrapper class for primitive int, to be used as a parameter for Menu
  */
-public class PInteger {
-    private int value;
-
-    public PInteger(int value) {
-        this.value = value;
+public class PInteger extends PValue<Integer> {
+    public PInteger(SharedPreferences sp, String key, Integer value) {
+        super(sp, key, value);
     }
 
-    public int get() {
-        return value;
+    public PInteger(Integer value) {
+        super(value);
     }
 
-    public void set(int value) {
-        this.value = value;
+    public static PInteger of(SharedPreferences sp, String key, Integer value) {
+        return new PInteger(sp, key, value);
     }
 
-    public static PInteger of(int value) {
+    public static PInteger of(Integer value) {
         return new PInteger(value);
     }
 }

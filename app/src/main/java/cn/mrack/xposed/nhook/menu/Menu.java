@@ -77,15 +77,13 @@ public class Menu extends FrameLayout {
      **/
     public Menu(Context context, Config config) {
         super(context);
-
         this.isCollapsed = true;
         this.context = context;
         this.config = config;
-        //get the screen size
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         int screenWidth = displayMetrics.widthPixels;
         int screenHeight = displayMetrics.heightPixels;
-        this.position = new Point(0, screenHeight / 2);
+        this.position = new Point(screenWidth, screenHeight / 2);
         this.mCollapsed = new RelativeLayout(this.context);
         this.mExpanded = new LinearLayout(this.context);
         this.launcherIcon = new ImageView(this.context);
