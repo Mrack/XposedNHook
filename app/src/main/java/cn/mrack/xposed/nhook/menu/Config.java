@@ -17,7 +17,9 @@ public class Config {
     protected final int SEEKBAR_COLOR = Color.parseColor("#80CBC4");
     protected final int CHECKBOX_COLOR = Color.parseColor("#80CBC4");
     protected final String MENU_TITLE = Html.fromHtml("Moded By (your name)").toString();
+    protected final boolean MENU_TITLE_ENABLE = false;
     protected final String MENU_SUBTITLE = "https://site.com lorem ipsum dolor sit amet consectetur adipiscing elit";
+    protected final boolean MENU_SUBTITLE_ENABLE = false;
     protected final int MENU_WIDTH = 290;
     protected final int MENU_HEIGHT = 210;
     protected final int MENU_BG_COLOR = Color.parseColor("#EE1C2A35");

@@ -1,53 +1,62 @@
 package cn.mrack.xposed.nhook;
 
-
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.util.Log;
-
-import java.util.Arrays;
-
+import java.util.ArrayList;
+import java.util.List;
 import cn.mrack.xposed.nhook.menu.Menu;
 import cn.mrack.xposed.nhook.menu.PBoolean;
 import cn.mrack.xposed.nhook.menu.PInteger;
 import cn.mrack.xposed.nhook.menu.PString;
+import cn.mrack.xposed.nhook.menu.SurfaceImGUI;
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.IXposedHookZygoteInit;
-import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class MainHook implements IXposedHookLoadPackage {
     private static final String TAG = "MainHook";
-    private static final String[] packageList = new String[]{
-            "com.google.android.youtube"
-    };
+
+    public static final boolean USE_NATIVE_MENU = true;
+
+    private static final List<String> packageList = new ArrayList<String>() {{
+        add("com.google.android.youtube");
+        add("com.block.juggle");
+        add("com.tencent.tmgp.sgame");
+    }};
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (lpparam.packageName.equals(BuildConfig.APPLICATION_ID)) {
             XposedHelpers.findAndHookMethod(BuildConfig.APPLICATION_ID + ".SettingsActivity",
                     lpparam.classLoader, "isModuleActive", XC_MethodReplacement.returnConstant(Boolean.TRUE));
-            Log.d(TAG, "Hooked " + BuildConfig.APPLICATION_ID);
-        } else if (Arrays.binarySearch(packageList, lpparam.packageName) >= 0) {
+        } else if (packageList.contains(lpparam.packageName)) {
             Log.d(TAG, "handleLoadPackage: " + lpparam.packageName + " loaded");
             HookUtils.attachApplication(HookUtils::nativeHookInit);
             HookUtils.attachActivity(activity -> {
-                createMenu(activity);
+                if (USE_NATIVE_MENU){
+                    createNativeMenu(activity);
+                } else {
+                    createMenu(activity);
+                }
                 NHook.sign1("test sign trace");
             });
         }
+    }
+
+    private static void createNativeMenu(Context activity) {
+        Menu menu = new Menu(activity);
+        menu.attach();
+        menu.Surface(new SurfaceImGUI(activity));
     }
 
     private static void createMenu(Context activity) {
         SharedPreferences sp = activity.getSharedPreferences("menu", Context.MODE_PRIVATE);
         Menu menu = new Menu(activity);
         menu.attach();
-
+        menu.Category("Value Change");
         menu.Category("Value Change");
         PBoolean value1 = PBoolean.of(sp, "test1", false);
         value1.setOnValueChangedListener((v, v1) -> {

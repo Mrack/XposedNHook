@@ -12,4 +12,3 @@ Java_cn_mrack_xposed_nhook_NHook_test111(JNIEnv *env, jclass thiz, jint value) {
     // write code here
     return env->NewStringUTF(buf);
 }
-

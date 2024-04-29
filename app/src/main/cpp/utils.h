@@ -8,6 +8,7 @@
 #include <string>
 #include "dobby/dobby.h"
 #include <assert.h>
+#include <android/log.h>
 #include <jni.h>
 
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "MainHook", __VA_ARGS__)

@@ -10,5 +10,6 @@
 #include <set>
 
 void hook_module_load();
+void *get_address_from_module(const char *module_path, const char *symbol_name);
 
 #endif //XPOSEDNHOOK_LINKER_HOOK_H

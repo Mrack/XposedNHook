@@ -1,9 +1,41 @@
 //
 // Created by Mrack on 2024/4/20.
 //
+
+#include "qbdihook.h"
 #include <jni.h>
 #include <cstring>
 #include <cstdio>
+
+#include <fstream>
+#include "vm.h"
+#include "utils.h"
+
+void vm_handle_add(void *address, DobbyRegisterContext *ctx) {
+    LOGT("vm address %p ", address);
+    DobbyDestroy(address);
+    auto vm_ = new vm();
+    auto qvm = vm_->init(address);
+    auto state = qvm.getGPRState();
+    syn_regs(ctx, state);
+    uint8_t *fakestack;
+    QBDI::allocateVirtualStack(state, 0x800000, &fakestack);
+    qvm.call(nullptr, (uint64_t) address);
+    QBDI::alignedFree(fakestack);
+
+    // write to file
+    std::ofstream out;
+    std::string data = get_data_path(gContext);
+    out.open(data + "/trace_log.txt", std::ios::out);
+    out << vm_->logbuf.str();
+    out.close();
+}
+
+
+void test_QBDI() {
+    DobbyInstrument((void *) (Java_cn_mrack_xposed_nhook_NHook_sign1), vm_handle_add);
+}
+
 
 unsigned char s[256];
 unsigned char t[256];

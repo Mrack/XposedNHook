@@ -11,13 +11,24 @@ cmake_minimum_required(VERSION 3.22.1)
 # build script scope).
 project("nhook")
 
+set(CMAKE_CXX_STANDARD 20)
+
+set(LINKER_FLAGS "-ffixed-x18 -Wl,--hash-style=both")
+set(C_FLAGS "-Werror=format -fdata-sections -ffunction-sections")
+set(CXX_FLAGS "${CXX_FLAGS} -fno-exceptions -fno-rtti")
+
 include_directories(.)
 
+find_library(egl EGL)
+find_library(GLESV2_LIB GLESv2)
+find_library(android android)
 add_library(local_dobby STATIC IMPORTED)
 add_library(local_qbdi STATIC IMPORTED)
 
 set_target_properties(local_dobby PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/${ANDROID_ABI}/libdobby.a)
 set_target_properties(local_qbdi PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/${ANDROID_ABI}/libQBDI.a)
+
+include_directories(imgui)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
@@ -25,11 +36,26 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         linker_hook.cpp
         vm.cpp
         utils.cpp
+#        hide.cpp
 
         #demo
-        demo/rc4.cpp
-        demo/test1.cpp
+        demo/qbdihook.cpp
+        demo/modmenu.cpp
+        demo/ytbssl.cpp
+        demo/modmenu_native.cpp
 )
+
+
+
+include_directories(./imgui)
+
+add_library(imgui STATIC
+        imgui/imgui.cpp
+        imgui/imgui_draw.cpp
+        imgui/imgui_tables.cpp
+        imgui/imgui_widgets.cpp
+        imgui/backends/imgui_impl_android.cpp
+        imgui/backends/imgui_impl_opengl3.cpp)
 
 # Specifies libraries CMake should link to your target library. You
 # can link libraries from various origins, such as libraries defined in this
@@ -39,4 +65,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         android
         local_dobby
         local_qbdi
+        EGL
+        GLESv3
+        imgui
         log)

@@ -1,0 +1,3 @@
+[submodule "app/src/main/cpp/imgui"]
+	path = app/src/main/cpp/imgui
+	url = https://github.com/Mrack/imgui.git

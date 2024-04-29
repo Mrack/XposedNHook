@@ -8,6 +8,7 @@
 #include "QBDI.h"
 #include <iomanip>
 #include "nhook.h"
+#include "dobby/dobby.h"
 #include <sstream>
 
 

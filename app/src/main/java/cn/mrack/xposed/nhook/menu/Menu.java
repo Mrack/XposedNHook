@@ -26,6 +26,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -169,6 +170,11 @@ public class Menu extends FrameLayout {
         textView.setPadding(0, 5, 0, 5);
 
         addFeature(textView);
+    }
+
+    public void Surface(SurfaceView surface) {
+        surface.setLayoutParams(new LinearLayout.LayoutParams(dp(config.MENU_WIDTH), dp(config.MENU_HEIGHT)));
+        addFeature(surface);
     }
 
     /**
@@ -685,14 +691,18 @@ public class Menu extends FrameLayout {
         closeBtn.setTextColor(config.TEXT_COLOR_PRIMARY);
         closeBtn.setOnClickListener(view -> collapseMenu());
 
-        mHeader.addView(title);
+        if (config.MENU_TITLE_ENABLE){
+            mHeader.addView(title);
+        }
         scrollView.addView(featureView);
 
         mFooter.addView(hideBtn);
         mFooter.addView(closeBtn);
 
         mExpanded.addView(mHeader);
-        mExpanded.addView(subtitle);
+        if (config.MENU_SUBTITLE_ENABLE){
+            mExpanded.addView(subtitle);
+        }
         mExpanded.addView(scrollView);
         mExpanded.addView(mFooter);
 
