@@ -12,6 +12,7 @@
 #include "utils.h"
 
 void vm_handle_add(void *address, DobbyRegisterContext *ctx) {
+
     LOGT("vm address %p ", address);
     DobbyDestroy(address);
     auto vm_ = new vm();

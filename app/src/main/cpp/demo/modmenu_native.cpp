@@ -238,12 +238,6 @@ void init(ANativeWindow *window) {
 const int FRAME_PER_SECOND = 30;
 std::atomic<bool> g_Rendering(false);
 
-void render() {
-    while (g_Rendering) {
-        draw();
-        usleep(1000 / FRAME_PER_SECOND);
-    }
-}
 
 extern "C"
 JNIEXPORT void JNICALL

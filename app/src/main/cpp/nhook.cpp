@@ -8,21 +8,23 @@
 #include "demo/ytbssl.h"
 #include "demo/modmenu_native.h"
 #include "linker_hook.h"
-//#include "hide.h"
+#include <unistd.h>
+#include <dlfcn.h>
+#include "demo/il2cpp_dumper.h"
 
 extern "C"
 {
+
 JNIEXPORT void JNICALL
 Java_cn_mrack_xposed_nhook_NHook_initNativeHook(JNIEnv *env, jclass thiz, jobject context) {
     LOGD("initNativeHook");
     gContext = env->NewGlobalRef(context);
-//    hide_module("libnhook.so");
-//    LOGD("test_QBDI");
-//    test_QBDI();
-//    LOGD("test_youtube");
-//    test_youtube();
-//    LOGD("test_modmenu_native");
-//    test_modmenu_native();
+    LOGD("test_QBDI");
+    test_QBDI();
+    LOGD("test_youtube");
+    test_youtube();
+    LOGD("dump_il2cpp");
+    dumpIL2cpp(get_data_path(gContext));
 }
 
 

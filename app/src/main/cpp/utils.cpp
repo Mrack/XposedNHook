@@ -2,6 +2,7 @@
 // Created by Mrack on 2024/4/19.
 //
 #include "utils.h"
+#include "elfio/elfio.hpp"
 
 JavaVM *gVm = nullptr;
 jobject gContext = nullptr;
@@ -90,6 +91,24 @@ char *get_linker_path() {
     return linker;
 }
 
+const char* find_path_from_maps(const char *soname) {
+    FILE *fp = fopen("/proc/self/maps", "r");
+    if (fp == NULL) {
+        return nullptr;
+    }
+    // get path from maps
+    char line[1024];
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, soname)) {
+            char *start = strchr(line, '/');
+            char *path = strdup(start);
+            fclose(fp);
+            return path;
+        }
+    }
+    fclose(fp);
+    return nullptr;
+}
 
 std::pair<size_t, size_t> find_info_from_maps(const char *soname) {
     FILE *fp = fopen("/proc/self/maps", "r");
@@ -176,4 +195,42 @@ int boyer_moore_search(u_char *haystack, size_t haystackLen, u_char *needle, siz
         }
     }
     return -1;
+}
+
+
+
+void *get_address_from_module(const char *module_path, const char *symbol_name) {
+    ELFIO::elfio elffile;
+    std::string name;
+    ELFIO::Elf64_Addr value;
+    ELFIO::Elf_Xword size;
+    unsigned char bind;
+    unsigned char type;
+    ELFIO::Elf_Half section_index;
+    unsigned char other;
+    const char *file_name = strrchr(module_path, '/');
+    elffile.load(module_path);
+    size_t module_base = find_info_from_maps(file_name).first;
+    ELFIO::section *s = elffile.sections[".dynsym"];
+    if (s != nullptr) {
+        ELFIO::symbol_section_accessor symbol_accessor(elffile, s);
+        for (int i = 0; i < symbol_accessor.get_symbols_num(); ++i) {
+            symbol_accessor.get_symbol(i, name, value, size, bind, type, section_index, other);
+            if (name.find(symbol_name) != std::string::npos && type == ELFIO::STT_FUNC) {
+                return (void *) (value + module_base);
+            }
+        }
+    }
+
+    s = elffile.sections[".symtab"];
+    if (s != nullptr) {
+        ELFIO::symbol_section_accessor symbol_accessor(elffile, s);
+        for (int i = 0; i < symbol_accessor.get_symbols_num(); ++i) {
+            symbol_accessor.get_symbol(i, name, value, size, bind, type, section_index, other);
+            if (name.find(symbol_name) != std::string::npos) {
+                return (void *) (value + module_base);
+            }
+        }
+    }
+    return nullptr;
 }

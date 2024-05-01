@@ -27,7 +27,6 @@ void test_youtube() {
 }
 
 void module_load(const char *file_path) {
-    LOGD("module_load: %s", file_path);
     std::string path = file_path;
     if (path.find("libcronet") == std::string::npos) {
         return;

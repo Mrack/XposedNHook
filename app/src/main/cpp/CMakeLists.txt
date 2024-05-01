@@ -13,9 +13,10 @@ project("nhook")
 
 set(CMAKE_CXX_STANDARD 20)
 
+
 set(LINKER_FLAGS "-ffixed-x18 -Wl,--hash-style=both")
-set(C_FLAGS "-Werror=format -fdata-sections -ffunction-sections")
-set(CXX_FLAGS "${CXX_FLAGS} -fno-exceptions -fno-rtti")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=format -fdata-sections -ffunction-sections -fvisibility=hidden -Wl,--exclude-libs,ALL")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti -fvisibility=hidden -Wl,--exclude-libs,ALL")
 
 include_directories(.)
 
@@ -36,13 +37,13 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         linker_hook.cpp
         vm.cpp
         utils.cpp
-#        hide.cpp
 
         #demo
         demo/qbdihook.cpp
         demo/modmenu.cpp
         demo/ytbssl.cpp
         demo/modmenu_native.cpp
+        demo/il2cpp_dumper.cpp
 )
 
 

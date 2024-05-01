@@ -25,6 +25,7 @@ public class MainHook implements IXposedHookLoadPackage {
         add("com.google.android.youtube");
         add("com.block.juggle");
         add("com.tencent.tmgp.sgame");
+        add("com.colossi.survival.samurai");
     }};
 
     @Override
